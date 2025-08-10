@@ -1,9 +1,4 @@
-// minimal SW for GitHub Pages
-self.addEventListener('install', function (event) {
-  self.skipWaiting();
-});
-self.addEventListener('activate', function (event) {
-  self.clients.claim();
-});
-// pass-through fetch (no caching yet)
-self.addEventListener('fetch', function (event) {});
+// minimal SW for GitHub Pages (pass-through)
+self.addEventListener('install', e => self.skipWaiting());
+self.addEventListener('activate', e => self.clients.claim());
+self.addEventListener('fetch', e => {});

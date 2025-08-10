@@ -4,39 +4,298 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Boot Check</title>
+  <title>Futures Golf‑Mode — Bot Console</title>
   <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0b0d10" />
   <style>
-    :root{--bg:#ffffff;--fg:#111827;--muted:#6b7280;--card:#f9fafb}
+    :root{
+      --bg:#0b0d10; --fg:#e5e7eb; --muted:#94a3b8; --card:#11151a; --line:#1f2937;
+      --btn:#334155; --btn2:#2563eb; --good:#16a34a; --bad:#ef4444;
+    }
     *{box-sizing:border-box}
-    body{margin:24px;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;background:var(--bg);color:var(--fg)}
-    .card{background:var(--card);border:1px solid #e5e7eb;border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-    h1{margin:0 0 8px 0}
-    code{background:#eef2f7;border-radius:6px;padding:2px 6px}
-    a{color:#2563eb;text-decoration:underline}
+    body{margin:14px;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;background:var(--bg);color:var(--fg)}
+    h1{font-size:20px;margin:0 0 10px 0}
+    h2{font-size:16px;margin:14px 0 8px 0}
+    .wrap{max-width:880px;margin:0 auto}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,.25);margin-bottom:14px}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input,select{width:100%;background:#0f141a;border:1px solid #263241;border-radius:10px;padding:10px;color:var(--fg)}
+    .row{display:flex;gap:12px}
+    .row>div{flex:1}
+    .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .btn{background:var(--btn);border:1px solid #3b4554;color:#e5e7eb;padding:10px 12px;border-radius:12px}
+    .btn.primary{background:var(--btn2);border-color:#1d4ed8}
+    .btn.good{background:#14532d;border-color:#166534}
+    .btn.bad{background:#4c0f12;border-color:#7f1d1d}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .muted{color:var(--muted);font-size:12px}
+    .kpi{display:flex;gap:12px;flex-wrap:wrap}
+    .kpi .tag{background:#0f141a;border:1px solid #263241;border-radius:999px;padding:6px 10px;font-size:12px}
+    .foot{font-size:12px;color:var(--muted);text-align:center;margin:18px 0}
+    a{color:#60a5fa}
   </style>
 </head>
 <body>
-  <h1>Boot Check ✅</h1>
-  <p>This minimal page proves HTML renders and JS executes on GitHub Pages.</p>  <div class="card">
-    <p id="js">JS OK: (pending)</p>
-    <p id="sw" class="muted">SW: (registering…)</p>
-  </div>  <p style="margin-top:14px">
-    <a href="health.html">Open health.html</a> ·
-    <a href="index.html?v=9">Reload (v9)</a>
-  </p>  <script>
-    // JS sanity
-    document.getElementById('js').textContent = 'JS OK: ' + new Date().toISOString();
+  <div class="wrap">
+    <div class="card">
+      <h1>⛳ Futures Golf‑Mode — Bot Console</h1>
+      <div class="kpi">
+        <div class="tag">Multi‑TP Bracket</div>
+        <div class="tag">Auto BE after TP1</div>
+        <div class="tag">Trailing after TP2</div>
+        <div class="tag">Daily/Per‑trade caps</div>
+        <div class="tag">Kill‑Switch</div>
+        <div class="tag">One‑Click Go Live</div>
+      </div>
+    </div><!-- Worker / Auth / Mode -->
+<div class="card">
+  <h2>🤖 Bot Control (Phone‑Friendly)</h2>
+  <div class="row">
+    <div>
+      <label>Worker URL (Cloudflare)</label>
+      <input id="wkUrl" placeholder="https://your-worker.workers.dev" />
+    </div>
+    <div>
+      <label>Auth Token</label>
+      <input id="wkAuth" type="password" placeholder="••••••" />
+    </div>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <div>
+      <label>Mode</label>
+      <select id="wkMode">
+        <option value="paper" selected>Paper</option>
+        <option value="live">Live</option>
+      </select>
+    </div>
+    <div>
+      <label>Exchange</label>
+      <select id="wkExch">
+        <option value="bybit" selected>Bybit</option>
+        <option value="okx">OKX</option>
+      </select>
+    </div>
+    <div style="align-self:end">
+      <button class="btn primary" id="wkGoLive">🚀 One‑Click Go Live</button>
+    </div>
+  </div>
 
-    // Optional: register the service worker to mimic app behavior later
+  <h2 style="margin-top:14px">Safety Caps</h2>
+  <div class="row3">
+    <div>
+      <label>Daily Risk Cap (USDT)</label>
+      <input id="wkDailyRisk" type="number" step="1" placeholder="120" />
+    </div>
+    <div>
+      <label>Per‑Trade Risk Cap (USDT)</label>
+      <input id="wkTradeRisk" type="number" step="1" placeholder="50" />
+    </div>
+    <div>
+      <label>Leverage Cap</label>
+      <input id="wkLevCap" type="number" step="1" placeholder="3" />
+    </div>
+  </div>
+  <div class="row3" style="margin-top:10px">
+    <div>
+      <label>Max Slippage (%)</label>
+      <input id="wkSlip" type="number" step="0.01" placeholder="0.5" />
+    </div>
+    <div>
+      <label>Hours (Start, 0–23 UTC)</label>
+      <input id="wkH1" type="number" step="1" placeholder="0" />
+    </div>
+    <div>
+      <label>Hours (End, 0–23 UTC)</label>
+      <input id="wkH2" type="number" step="1" placeholder="24" />
+    </div>
+  </div>
+
+  <h2 style="margin-top:14px">Set & Forget Bracket</h2>
+  <div class="row3">
+    <div>
+      <label>TP1 (R multiple)</label>
+      <input id="wkTP1R" type="number" step="0.25" value="1" />
+    </div>
+    <div>
+      <label>TP2 (R multiple)</label>
+      <input id="wkTP2R" type="number" step="0.25" value="2.5" />
+    </div>
+    <div>
+      <label>TP3 (R multiple)</label>
+      <input id="wkTP3R" type="number" step="0.25" value="4" />
+    </div>
+  </div>
+  <div class="row3" style="margin-top:10px">
+    <div>
+      <label>TP1 Size (%)</label>
+      <input id="wkTP1Pct" type="number" step="1" value="40" />
+    </div>
+    <div>
+      <label>TP2 Size (%)</label>
+      <input id="wkTP2Pct" type="number" step="1" value="40" />
+    </div>
+    <div>
+      <label>TP3 Size (%)</label>
+      <input id="wkTP3Pct" type="number" step="1" value="20" />
+    </div>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <label style="display:flex;align-items:center;gap:8px">
+      <input id="wkMoveBE" type="checkbox" checked /> Move Stop to Breakeven after TP1
+    </label>
+  </div>
+
+  <div class="card" style="background:#0f141a;border-color:#242f3d;margin-top:12px">
+    <div class="row3">
+      <div>
+        <label>Entry Price</label>
+        <input id="entry" type="number" step="0.01" placeholder="60000" />
+      </div>
+      <div>
+        <label>Stop Price</label>
+        <input id="stop" type="number" step="0.01" placeholder="59500" />
+      </div>
+      <div>
+        <label>Leverage</label>
+        <input id="lev" type="number" step="1" value="3" />
+      </div>
+    </div>
+    <div class="row3" style="margin-top:10px">
+      <div>
+        <label>Account Balance (USDT)</label>
+        <input id="balance" type="number" step="1" placeholder="2000" />
+      </div>
+      <div>
+        <label>Risk % of Balance</label>
+        <input id="riskPct" type="number" step="0.1" value="2.5" />
+      </div>
+      <div style="align-self:end">
+        <div class="muted">Used only for paper‑test sizing</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="presetCon">Conservative</button>
+    <button class="btn" id="presetBal">Balanced</button>
+    <button class="btn" id="presetAgg">Aggressive</button>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="wkSave">Save</button>
+    <button class="btn primary" id="wkPush">Push Admin Settings</button>
+    <button class="btn" id="wkStatusBtn">Status</button>
+    <button class="btn" id="wkPing">Ping</button>
+    <button class="btn bad" id="wkPanic">Panic Kill‑Switch</button>
+    <button class="btn" id="wkTestLong">Paper Test: LONG</button>
+    <button class="btn" id="wkTestShort">Paper Test: SHORT</button>
+    <button class="btn good" id="wkBracketTest">Paper Test: Place Bracket</button>
+  </div>
+  <div id="wkStatus" class="muted" style="margin-top:8px">Not configured</div>
+</div>
+
+<div class="foot">Tip: Start in <b>Paper</b>. Verify partials + BE + trailing. Then use <b>🚀 Go Live</b> after adding keys in Cloudflare.</div>
+
+  </div>  <script>
+    // --- PWA SW registration (works with our minimal pass‑through SW) ---
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./service-worker.js').then(reg => {
-        document.getElementById('sw').textContent = 'SW registered ✔️ (' + (reg.scope || 'ok') + ')';
-      }).catch(err => {
-        document.getElementById('sw').textContent = 'SW registration error: ' + err;
-      });
-    } else {
-      document.getElementById('sw').textContent = 'SW not supported in this browser';
+      navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
     }
+
+    const K = 'futures.calc.botcfg.v1';
+    const cfg = JSON.parse(localStorage.getItem(K)||'{}');
+    const $ = id => document.getElementById(id);
+    const fields = ['wkUrl','wkAuth','wkMode','wkExch','wkDailyRisk','wkTradeRisk','wkLevCap','wkSlip','wkH1','wkH2','wkTP1R','wkTP2R','wkTP3R','wkTP1Pct','wkTP2Pct','wkTP3Pct','wkMoveBE'];
+
+    function status(t){ $('wkStatus').textContent = t; }
+    function loadCfg(){ fields.forEach(f=>{ const el=$(f); if(!el) return; const v=cfg[f]; if(v!==undefined){ if(el.type==='checkbox') el.checked=!!v; else el.value=v; }}); status('Loaded'); }
+    function saveCfg(){ fields.forEach(f=>{ const el=$(f); if(!el) return; cfg[f]=(el.type==='checkbox')?el.checked:el.value; }); localStorage.setItem(K, JSON.stringify(cfg)); status('Saved'); }
+
+    function adminBody(){
+      return {
+        mode: ($('wkMode').value||'paper'),
+        exchange: ($('wkExch').value||'bybit'),
+        dailyRiskCapUSDT: Number($('wkDailyRisk').value||0),
+        perTradeRiskCapUSDT: Number($('wkTradeRisk').value||0),
+        leverageCap: Number($('wkLevCap').value||1),
+        maxSlippagePct: Number($('wkSlip').value||0.5),
+        hours: [ Number($('wkH1').value||0), Number($('wkH2').value||24) ],
+        bracket: {
+          tp: [
+            { r: Number($('wkTP1R').value||1),   pct: Number($('wkTP1Pct').value||35)/100 },
+            { r: Number($('wkTP2R').value||2),   pct: Number($('wkTP2Pct').value||35)/100 },
+            { r: Number($('wkTP3R').value||3),   pct: Number($('wkTP3Pct').value||30)/100 }
+          ],
+          moveSLtoBEonTP1: !!$('wkMoveBE').checked
+        }
+      };
+    }
+
+    async function call(path, options={}){
+      const base = ($('wkUrl').value||'').replace(/\/$/,'');
+      if(!base) return status('Set Worker URL');
+      const url = base + path;
+      const headers = Object.assign({ 'Content-Type':'application/json' }, options.headers||{});
+      const tok = $('wkAuth').value||''; if (tok) headers['Authorization'] = 'Bearer ' + tok;
+      const res = await fetch(url, { method: options.method||'POST', headers, body: options.body?JSON.stringify(options.body):undefined });
+      let data = {}; try{ data = await res.json(); }catch(e){}
+      status((res.ok?'✅':'❌') + ' ' + (data.message||res.status));
+      console.log('Bot call', path, data);
+      return {res,data};
+    }
+
+    $('wkSave').onclick = saveCfg;
+    $('wkPing').onclick = () => call('/ping', { method:'POST' });
+    $('wkStatusBtn').onclick = () => call('/status', { method:'GET' });
+    $('wkPush').onclick = () => call('/admin', { body: adminBody() });
+    $('wkPanic').onclick = () => call('/panic', { method:'POST' });
+
+    function sample(side){
+      const entry = parseFloat($('entry').value||0);
+      const stop  = parseFloat($('stop').value||0);
+      const bal   = parseFloat($('balance').value||0);
+      const rPct  = parseFloat($('riskPct').value||0);
+      const riskAmt = bal * (rPct/100);
+      const diff = Math.abs(entry - stop);
+      const qty = diff>0 ? (riskAmt / diff) : 0.001;
+      return {
+        symbol: 'BTCUSDT',
+        side: side==='LONG'?'BUY':'SELL',
+        size: Number(qty.toFixed(6)),
+        leverage: Math.max(1, parseFloat($('lev').value||1)),
+        reduce_only: false,
+        tag: 'app-test',
+        signalPx: entry,
+        stopPx: stop,
+        riskUSDT: Number(riskAmt.toFixed(2))
+      };
+    }
+
+    $('wkTestLong').onclick  = () => call('/',       { body: sample('LONG') });
+    $('wkTestShort').onclick = () => call('/',       { body: sample('SHORT') });
+    $('wkBracketTest').onclick = () => call('/bracket', { body: sample('LONG') });
+
+    $('wkGoLive').onclick = async () => {
+      if(!confirm('Switch to LIVE and push settings? Make sure API keys are set in Cloudflare Worker secrets.')) return;
+      $('wkMode').value = 'live';
+      await call('/admin', { body: adminBody() });
+      await call('/status', { method:'GET' });
+    };
+
+    // Presets
+    function fill(p){ const set=(id,val)=>{const el=$(id); if(!el)return; if(el.type==='checkbox') el.checked=!!val; else el.value=val; cfg[id]=val;};
+      set('wkDailyRisk',p.daily); set('wkTradeRisk',p.perTrade); set('wkLevCap',p.levCap); set('wkSlip',p.slip); set('wkH1',p.h1); set('wkH2',p.h2);
+      set('wkTP1R',p.tp1r); set('wkTP2R',p.tp2r); set('wkTP3R',p.tp3r); set('wkTP1Pct',p.tp1pct); set('wkTP2Pct',p.tp2pct); set('wkTP3Pct',p.tp3pct); set('wkMoveBE',p.moveBE);
+      localStorage.setItem(K, JSON.stringify(cfg)); status('Preset loaded — review & Push'); }
+    const P={
+      conservative:{daily:60, perTrade:30, levCap:2, slip:0.5, h1:0,h2:24, tp1r:1, tp2r:2,   tp3r:3,   tp1pct:30,tp2pct:40,tp3pct:30, moveBE:true},
+      balanced:    {daily:120,perTrade:50, levCap:3, slip:0.5, h1:0,h2:24, tp1r:1, tp2r:2,   tp3r:3,   tp1pct:35,tp2pct:35,tp3pct:30, moveBE:true},
+      aggressive:  {daily:180,perTrade:75, levCap:5, slip:0.4, h1:0,h2:24, tp1r:1, tp2r:2.5, tp3r:4,   tp1pct:40,tp2pct:40,tp3pct:20, moveBE:true}
+    };
+    $('presetCon').onclick = ()=>fill(P.conservative);
+    $('presetBal').onclick = ()=>fill(P.balanced);
+    $('presetAgg').onclick = ()=>fill(P.aggressive);
+
+    loadCfg();
   </script></body>
 </html>

@@ -1,0 +1,331 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Crypto Futures Risk Calculator<\/title>
+  <meta name="theme-color" content="#4f8cff" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root{
+      --bg: #0b0d10;
+      --card: #13161b;
+      --muted: #8b95a7;
+      --text: #e7ecf3;
+      --brand: #4f8cff;
+      --accent: #32d583;
+      --danger: #f97066;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    @media (prefers-color-scheme: light) {
+      :root{ --bg:#f7f9fc; --card:#ffffff; --text:#0b0d10; --muted:#697586; --shadow:0 8px 20px rgba(16,24,40,.1) }
+    }
+    *{ box-sizing:border-box }
+    body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial; background:var(--bg); color:var(--text)}
+    .wrap{ max-width:1100px; margin:40px auto; padding:0 16px }
+    .head{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px }
+    .title{ font-size:28px; font-weight:800; letter-spacing:.3px }
+    .sub{ color:var(--muted); font-size:14px }
+    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:18px }
+    @media (max-width: 900px){ .grid{ grid-template-columns:1fr } }
+    .card{ background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px }
+    .card h3{ margin:0 0 12px; font-size:16px }
+    label{ font-size:13px; color:var(--muted); display:block; margin-bottom:6px }
+    input[type="number"], select{ width:100%; padding:12px 14px; border-radius:12px; border:1px solid rgba(148,163,184,.25); background:rgba(255,255,255,.02); color:var(--text); outline:none }
+    input::placeholder{ color:#9aa4b2 }
+    .row{ display:grid; grid-template-columns: repeat(2, 1fr); gap:12px }
+    .row3{ display:grid; grid-template-columns: repeat(3, 1fr); gap:12px }
+    .pill{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; background:rgba(79,140,255,.08); color:#9bbcff; border-radius:999px; font-size:12px; font-weight:600 }
+    .switch{ display:flex; gap:8px }
+    .switch button{ flex:1; padding:10px 12px; border-radius:12px; border:1px solid rgba(148,163,184,.25); background:rgba(255,255,255,.02); color:var(--text); cursor:pointer; font-weight:700 }
+    .switch button.active.long{ background:rgba(50,213,131,.1); border-color:rgba(50,213,131,.4) }
+    .switch button.active.short{ background:rgba(249,112,102,.12); border-color:rgba(249,112,102,.45) }
+    .kpis{ display:grid; grid-template-columns: repeat(3, 1fr); gap:12px }
+    @media (max-width: 900px){ .kpis{ grid-template-columns: 1fr 1fr } }
+    .kpi{ background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)); border:1px solid rgba(148,163,184,.18); border-radius:16px; padding:14px }
+    .kpi .lbl{ color:var(--muted); font-size:12px }
+    .kpi .val{ font-size:18px; font-weight:800; margin-top:4px }
+    .targets{ width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:14px; border:1px solid rgba(148,163,184,.18) }
+    .targets th, .targets td{ padding:10px 12px; text-align:left; font-size:14px }
+    .targets thead{ background:rgba(148,163,184,.08) }
+    .targets tbody tr:nth-child(even){ background:rgba(148,163,184,.05) }
+    .bar{ height:8px; background:rgba(148,163,184,.18); border-radius:999px; overflow:hidden }
+    .bar > span{ display:block; height:100%; background:linear-gradient(90deg, var(--brand), #8b5cf6); width:0 }
+    .muted{ color:var(--muted); font-size:12px }
+    .btn{ padding:10px 12px; border-radius:12px; border:1px solid rgba(148,163,184,.25); background:rgba(255,255,255,.02); color:var(--text); cursor:pointer; font-weight:700 }
+    .btn.brand{ background:linear-gradient(90deg, #4f8cff, #8b5cf6); border:none }
+    .footer{ margin-top:18px; color:var(--muted); font-size:12px }
+    .danger{ color:var(--danger) }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <div>
+        <div class="title">🦈 Crypto Futures Risk Calculator</div>
+        <div class="sub">Position sizing, margin, R·R targets, fees & approximate liquidation price — all in one lightweight page.</div>
+      </div>
+      <div class="pill">v1 • Local & offline</div>
+    </div><div class="grid">
+  <section class="card">
+    <h3>Inputs</h3>
+    <div class="row">
+      <div>
+        <label>Account balance (USDT)</label>
+        <input id="balance" type="number" placeholder="e.g. 2500" step="0.01" value="2500" />
+      </div>
+      <div>
+        <label>Risk per trade (%)</label>
+        <input id="riskPct" type="number" placeholder="e.g. 1" step="0.01" value="1" />
+      </div>
+    </div>
+    <div class="row3" style="margin-top:12px">
+      <div>
+        <label>Entry price</label>
+        <input id="entry" type="number" placeholder="e.g. 61000" step="0.01" value="61000" />
+      </div>
+      <div>
+        <label>Stop price</label>
+        <input id="stop" type="number" placeholder="e.g. 60200" step="0.01" value="60200" />
+      </div>
+      <div>
+        <label>Leverage (×)</label>
+        <input id="lev" type="number" placeholder="e.g. 10" step="1" value="10" />
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div>
+        <label>Direction</label>
+        <div class="switch">
+          <button id="longBtn" class="active long" onclick="setSide('long')">Long</button>
+          <button id="shortBtn" onclick="setSide('short')">Short</button>
+        </div>
+      </div>
+      <div>
+        <label>Taker fee (each side, %)</label>
+        <input id="fee" type="number" step="0.001" value="0.06" />
+      </div>
+    </div>
+    <div style="display:flex; gap:12px; margin-top:16px">
+      <button class="btn brand" onclick="copySummary()">Copy Results</button>
+      <span class="muted">Tip: results update automatically as you type.</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h3>Outputs</h3>
+    <div class="kpis">
+      <div class="kpi"><div class="lbl">Risk amount (USDT)</div><div class="val" id="riskAmt">—</div></div>
+      <div class="kpi"><div class="lbl">Stop distance</div><div class="val" id="stopDist">—</div></div>
+      <div class="kpi"><div class="lbl">Position size (base)</div><div class="val" id="qty">—</div></div>
+      <div class="kpi"><div class="lbl">Position value (USDT)</div><div class="val" id="notional">—</div></div>
+      <div class="kpi"><div class="lbl">Margin used (USDT)</div><div class="val" id="margin">—</div></div>
+      <div class="kpi"><div class="lbl">Est. liquidation price*</div><div class="val" id="liq">—</div></div>
+    </div>
+    <div style="margin-top:14px" class="muted">* Approximation for linear USDT‑M contracts: long ≈ entry·(1 − 1/lev), short ≈ entry·(1 + 1/lev). Exchanges apply maintenance tiers.</div>
+    <div style="margin-top:14px" class="kpi">
+      <div class="lbl">Breakeven move (to cover open+close fees)</div>
+      <div class="bar" style="margin-top:8px"><span id="beBar"></span></div>
+      <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:12px">
+        <div id="beText">—</div>
+        <div class="muted" id="feeText">—</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section class="card" style="margin-top:18px">
+  <h3>Take‑Profit Targets (based on R multiples)</h3>
+  <table class="targets" id="targets">
+    <thead>
+      <tr>
+        <th>Multiple</th>
+        <th>Price</th>
+        <th>Gross PnL</th>
+        <th>Net PnL (after fees)</th>
+        <th>R:R</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<section class="card" style="margin-top:18px">
+  <h3>🤖 Bot Control (Phone‑Friendly)</h3>
+  <div class="kpi" style="margin:12px 0 8px 0">
+    <div class="lbl">Set & Forget Bracket Defaults</div>
+    <div class="muted">TP1/TP2/TP3 at R‑multiples with % splits. These are pushed to the Worker via “Push Admin Settings”.</div>
+  </div>
+  <div class="row3">
+    <div>
+      <label>TP1 (R multiple)</label>
+      <input id="wkTP1R" type="number" step="0.25" value="1" />
+    </div>
+    <div>
+      <label>TP2 (R multiple)</label>
+      <input id="wkTP2R" type="number" step="0.25" value="2" />
+    </div>
+    <div>
+      <label>TP3 (R multiple)</label>
+      <input id="wkTP3R" type="number" step="0.25" value="3" />
+    </div>
+  </div>
+  <div class="row3" style="margin-top:12px">
+    <div>
+      <label>TP1 Size (%)</label>
+      <input id="wkTP1Pct" type="number" step="1" value="35" />
+    </div>
+    <div>
+      <label>TP2 Size (%)</label>
+      <input id="wkTP2Pct" type="number" step="1" value="35" />
+    </div>
+    <div>
+      <label>TP3 Size (%)</label>
+      <input id="wkTP3Pct" type="number" step="1" value="30" />
+    </div>
+  </div>
+  <div class="row" style="margin-top:12px; align-items:center">
+    <div>
+      <label><input id="wkMoveBE" type="checkbox" style="margin-right:8px" checked /> Move Stop to Breakeven after TP1</label>
+    </div>
+    <div class="muted">Note: BE move depends on exchange API behavior; test in paper first.</div>
+  </div>
+  <div class="row">
+    <div>
+      <label>Worker URL (Cloudflare)</label>
+      <input id="wkUrl" type="text" placeholder="https://your-worker.your-subdomain.workers.dev" />
+    </div>
+    <div>
+      <label>Auth Token</label>
+      <input id="wkAuth" type="password" placeholder="••••••" />
+    </div>
+  </div>
+  <div class="row3" style="margin-top:12px">
+    <div>
+      <label>Mode</label>
+      <select id="wkMode">
+        <option value="paper" selected>Paper</option>
+        <option value="live">Live</option>
+      </select>
+    </div>
+    <div>
+      <label>Exchange</label>
+      <select id="wkExch">
+        <option value="bybit" selected>Bybit</option>
+        <option value="okx">OKX</option>
+      </select>
+    </div>
+    <div>
+      <label>&nbsp;</label>
+      <button class="btn" id="wkGoLive">🚀 One‑Click Go Live</button>
+    </div>
+  </div>
+  <div class="row3" style="margin-top:12px">
+    <div>
+      <label>Daily Risk Cap (USDT)</label>
+      <input id="wkDailyRisk" type="number" step="1" placeholder="e.g. 100" />
+    </div>
+    <div>
+      <label>Per‑Trade Risk Cap (USDT)</label>
+      <input id="wkTradeRisk" type="number" step="1" placeholder="e.g. 50" />
+    </div>
+    <div>
+      <label>Leverage Cap (×)</label>
+      <input id="wkLevCap" type="number" step="1" placeholder="e.g. 3" />
+    </div>
+  </div>
+  <div class="row3" style="margin-top:12px">
+    <div>
+      <label>Max Slippage (%)</label>
+      <input id="wkSlip" type="number" step="0.01" placeholder="0.5" />
+    </div>
+    <div>
+      <label>Hours (Start, 0–23)</label>
+      <input id="wkH1" type="number" step="1" placeholder="0" />
+    </div>
+    <div>
+      <label>Hours (End, 0–23)</label>
+      <input id="wkH2" type="number" step="1" placeholder="24" />
+    </div>
+  </div>
+  <div class="kpi" style="margin-top:12px">
+    <div class="lbl">Risk Presets</div>
+    <div class="muted">One‑tap fill for safe/balanced/aggressive settings. You can still tweak before pushing.</div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px">
+      <button class="btn" id="presetCon">Conservative</button>
+      <button class="btn" id="presetBal">Balanced</button>
+      <button class="btn" id="presetAgg">Aggressive</button>
+    </div>
+  </div>
+  <div style="display:flex; gap:12px; margin-top:14px; flex-wrap:wrap">
+    <button class="btn" id="wkStatusBtn">Status</button>
+    <button class="btn" id="wkSave">Save</button>
+    <button class="btn" id="wkPush">Push Admin Settings</button>
+    <button class="btn" id="wkPing">Ping</button>
+    <button class="btn danger" id="wkPanic">Panic Kill‑Switch</button>
+    <button class="btn" id="wkTestLong">Paper Test: LONG</button>
+    <button class="btn" id="wkTestShort">Paper Test: SHORT</button>
+    <button class="btn" id="wkBracketTest">Paper Test: Place Bracket</button>
+  </div>
+  <div id="wkStatus" class="muted" style="margin-top:10px">Not configured</div>
+</section>
+
+<section class="card" style="margin-top:18px">
+  <h3>📋 Setup Guide (Step‑by‑Step)</h3>
+  <ol style="line-height:1.6">
+    <li><b>Host the App (PWA)</b> — Upload <code>index.html</code>, <code>manifest.json</code>, <code>service-worker.js</code>, and <code>/icons/</code> to Netlify/GitHub Pages. Open on phone → <i>Add to Home Screen</i>.</li>
+    <li><b>Deploy Worker (Cloudflare)</b> — Create Worker → paste <i>golf-bot-worker.js</i> (in this file comments). Create KV <b>STATS</b> and bind. Add secret <b>AUTH_TOKEN</b>. (Add exchange keys only when going live.)</li>
+    <li><b>Configure from Phone</b> — In <i>🤖 Bot Control</i>, paste Worker URL + token → <b>Save</b>. Set caps and bracket (TP1/TP2/TP3), then <b>Push Admin Settings</b> → <b>Ping</b>.</li>
+    <li><b>TradingView</b> — Add the strategy below. Create three alerts:
+      <ul>
+        <li><b>Entry</b> → webhook to <code>/</code> (or <code>/bracket</code>), body: <code>entryJson</code>.</li>
+        <li><b>TP</b> → webhook to <code>/tp</code>, body: <code>tpJson(0.35)</code> / <code>0.35</code>, <code>0.35</code>, <code>0.30</code>.</li>
+        <li><b>Breakeven</b> → webhook to <code>/move_stop</code>, body: <code>beJson()</code>.</li>
+      </ul>
+    </li>
+    <li><b>Dry‑run (Paper)</b> — Keep mode = paper. Use the app buttons for <i>Paper Test</i> and <i>Bracket Test</i>. Validate responses + caps in <code>/status</code>.</li>
+    <li><b>Go Live (Optional)</b> — Flip mode via <i>Push Admin Settings</i> → include keys. Start with very small risk and verify TP/SL on the exchange.</li>
+  </ol>
+  <div class="muted">Safety Nets: Kill Switch • Daily/Per‑trade caps • Leverage cap • Slippage guard • Trading Hours • Reduce‑only exits.</div>
+</section>
+
+<section class="card" style="margin-top:18px">
+  <h3>🧪 TradingView: Strategy & Alert Templates (Pine v5)</h3>
+  <p class="muted">Copy the code below into a new Pine editor script in TradingView. Create three alerts as described above using the JSON helpers.</p>
+  <pre style="white-space:pre-wrap; font-size:12px; background:rgba(148,163,184,.08); padding:12px; border-radius:12px; overflow:auto"><code>//@version=5
+
+strategy('EMA Breakout ATR Stop (Bracket + Trailing + Webhooks)', overlay=true, calc_on_every_tick=true, initial_capital=10000, commission_type=strategy.commission.percent, commission_value=0.06) emaLen = input.int(200, 'EMA Length') atrLen = input.int(14, 'ATR Length') atrMult = input.float(1.5, 'ATR Stop Mult', step=0.1) adxMin = input.float(14.0, 'ADX Filter >=') riskUSDT = input.float(50, 'Risk per Trade (USDT)') // Bracket tp1R = input.float(1.0, 'TP1 R', step=0.25) tp2R = input.float(2.0, 'TP2 R', step=0.25) tp3R = input.float(3.0, 'TP3 R', step=0.25) // Trailing after TP2 trailEnable = input.bool(true, 'Trail after TP2') trailLookback = input.int(10, 'Trail Lookback (bars)', minval=2) trailATRmult = input.float(1.0, 'Trail ATR Mult', step=0.1)
+
+ema = ta.ema(close, emaLen) atr = ta.atr(atrLen) adx = ta.adx(14) inWindow = true
+
+longSig = ta.crossover(close, ema) and adx >= adxMin and inWindow shortSig = ta.crossunder(close, ema) and adx >= adxMin and inWindow
+
+longStop = close - atratrMult shortStop = close + atratrMult longQty  = riskUSDT / math.max(close - longStop, syminfo.mintick) shortQty = riskUSDT / math.max(shortStop - close, syminfo.mintick)
+
+if (longSig) strategy.entry('L', strategy.long, qty=longQty) if (shortSig) strategy.entry('S', strategy.short, qty=shortQty)
+
+// R levels rL = close - longStop rS = shortStop - close tp1L = close + rL * tp1R tp2L = close + rL * tp2R tp3L = close + rL * tp3R tp1S = close - rS * tp1R tp2S = close - rS * tp2R tp3S = close - rS * tp3R
+
+// State vars for trailing var bool trOnL = false var bool trOnS = false var float trLvlL = na var float trLvlS = na
+
+// Alerts JSON for Worker entryJson(side, qty, stp) => '{"symbol":"' + syminfo.ticker + '","side":"' + (side=='buy'?'BUY':'SELL') + '","size":' + str.tostring(qty) + ',"leverage":3,"reduce_only":false,"tag":"ema-breakout","signalPx":' + str.tostring(close) + ',"stopPx":' + str.tostring(stp) + ',"riskUSDT":' + str.tostring(riskUSDT) + '}' tpJson(frac) => '{"symbol":"' + syminfo.ticker + '","fraction":' + str.tostring(frac) + '}' beJson(px) => '{"symbol":"' + syminfo.ticker + '","price":' + str.tostring(px) + '}' stopJson() => '{"symbol":"' + syminfo.ticker + '}'
+
+// Emit entry alerts if (longSig) alert(entryJson('buy', longQty, longStop), alert.freq_once_per_bar_close) if (shortSig) alert(entryJson('sell', shortQty, shortStop), alert.freq_once_per_bar_close)
+
+// LONG TPs + BE if (strategy.position_size>0 and ta.crossover(close, tp1L)) alert(tpJson(0.35), alert.freq_once_per_bar_close) alert(beJson(strategy.position_avg_price), alert.freq_once_per_bar_close) // move to BE if (strategy.position_size>0 and ta.crossover(close, tp2L)) alert(tpJson(0.35), alert.freq_once_per_bar_close) trOnL := trailEnable if (strategy.position_size>0 and ta.crossover(close, tp3L)) alert(tpJson(0.30), alert.freq_once_per_bar_close)
+
+// SHORT TPs + BE if (strategy.position_size<0 and ta.crossunder(close, tp1S)) alert(tpJson(0.35), alert.freq_once_per_bar_close) alert(beJson(strategy.position_avg_price), alert.freq_once_per_bar_close) // move to BE if (strategy.position_size<0 and ta.crossunder(close, tp2S)) alert(tpJson(0.35), alert.freq_once_per_bar_close) trOnS := trailEnable if (strategy.position_size<0 and ta.crossunder(close, tp3S)) alert(tpJson(0.30), alert.freq_once_per_bar_close)
+
+// Trailing logic: send /move_stop only when the level steps up (or down for short) if (trOnL and strategy.position_size>0) hh = ta.highest(close, trailLookback) newLvl = hh - atrtrailATRmult if na(trLvlL) or newLvl > trLvlL trLvlL := newLvl alert(beJson(trLvlL), alert.freq_once_per_bar_close) if (trOnS and strategy.position_size<0) ll = ta.lowest(close, trailLookback) newLvlS = ll + atrtrailATRmult if na(trLvlS) or newLvlS < trLvlS trLvlS := newLvlS alert(beJson(trLvlS), alert.freq_once_per_bar_close)
+
+// Stop-out alerts when price breaches stored stop (approximation using our current trail levels) longStopNow = trOnL and not na(trLvlL) ? trLvlL : strategy.position_avg_price // after BE it will be >= BE shortStopNow = trOnS and not na(trLvlS) ? trLvlS : strategy.position_avg_price if (strategy.position_size>0 and close < longStopNow) alert(stopJson(), alert.freq_once_per_bar_close) trOnL := false trLvlL := na if (strategy.position_size<0 and close > shortStopNow) alert(stopJson(), alert.freq_once_per_bar_close) trOnS := false trLvlS := na
+
+// Visuals plot(ema, color=color.new(color.teal, 0)) plot(longStop, 'Long Init Stop', color=color.new(color.green, 60)) plot(shortStop,'Short Init Stop',color=color.new(color.red, 60)) plot(tp1L, 'TP1 L', color=color.new(color.green, 0)) plot(tp2L, 'TP2 L', color=color.new(color.green, 0)) plot(tp3L, 'TP3 L', color=color.new(color.green, 0)) plot(tp1S, 'TP1 S', color=color.new(color.red, 0)) plot(tp2S, 'TP2 S', color=color.new(color.red, 0)) plot(tp3S, 'TP3 S', color=color.new(color.red, 0))
+
+=============================================================================================
+
+</html>

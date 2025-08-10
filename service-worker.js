@@ -1,4 +1,4 @@
-// Simple PWA cache for offline usage // Scope: files served from your GitHub Pages site const CACHE = 'futures-calc-v1'; const ASSETS = [ './', './index.html' // You can add './manifest.json' and icons here too, but they are tiny and fetched once ];
+futures-calc-v3// Simple PWA cache for offline usage // Scope: files served from your GitHub Pages site const CACHE = 'futures-calc-v1'; const ASSETS = [ './', './index.html' // You can add './manifest.json' and icons here too, but they are tiny and fetched once ];
 
 self.addEventListener('install', event => { event.waitUntil( caches.open(CACHE) .then(cache => cache.addAll(ASSETS)) .then(() => self.skipWaiting()) ); });
 
